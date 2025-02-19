@@ -42,8 +42,6 @@ jobs:
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "storeFile=keystore.jks" >> android/key.properties
 
-
-
       - name: Clean Flutter Build
         run: flutter clean
 
@@ -71,8 +69,7 @@ jobs:
       - name: Extract version from pubspec.yaml
         id: extract_version
         run: |
-          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '
-')
+          version=$(grep '^version: ' pubspec.yaml | awk '{print $2}' | sed 's/\r//g' | sed 's/\n//g')
           echo "VERSION=$version" >> $GITHUB_ENV
 
       - name: Check if Tag Exists
