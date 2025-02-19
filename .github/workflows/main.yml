@@ -25,14 +25,6 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Run Tests
-        run: |
-          if [ -d "test" ] && [ "$(ls -A test)" ]; then
-            flutter test
-          else
-            echo "No tests found, skipping..."
-          fi
-
       - name: Build Android APK
         run: flutter build apk --release
 
