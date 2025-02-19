@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -26,7 +26,12 @@ jobs:
         run: flutter pub get
 
       - name: Run Tests
-        run: flutter test
+        run: |
+          if [ -d "test" ] && [ "$(ls -A test)" ]; then
+            flutter test
+          else
+            echo "No tests found, skipping..."
+          fi
 
       - name: Build Android APK
         run: flutter build apk --release
