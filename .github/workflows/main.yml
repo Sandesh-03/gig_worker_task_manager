@@ -19,7 +19,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.24.5 
+          flutter-version: 3.24.5  # Change to your required Flutter version
           channel: stable
 
       - name: Install Dependencies
@@ -46,7 +46,7 @@ jobs:
 
       - name: Ensure gh-pages branch exists
         run: |
-          git fetch origin gh-pages || git checkout --orphan gh-pages
+          git fetch origin gh-pages || (git checkout --orphan gh-pages && git commit --allow-empty -m "Initialize gh-pages" && git push origin gh-pages)
           git commit --allow-empty -m "Initialize gh-pages branch" || echo "Branch already exists"
           git push origin gh-pages || echo "Branch already exists"
 
