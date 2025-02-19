@@ -38,7 +38,7 @@ jobs:
 
       - name: Upload APK to GitHub Releases
         env:
-          personal_token: ${{ secrets.TOKEN }}
+          GH_TOKEN: ${{ secrets.TOKEN }}
         run: |
           LATEST_TAG=$(date +'%Y.%m.%d-%H%M%S')
           gh release create "$LATEST_TAG" --title "Release $LATEST_TAG" --notes "Latest APK release" --prerelease || echo "Release already exists"
@@ -49,6 +49,14 @@ jobs:
           git fetch origin gh-pages || git checkout --orphan gh-pages
           git commit --allow-empty -m "Initialize gh-pages branch" || echo "Branch already exists"
           git push origin gh-pages || echo "Branch already exists"
+
+      - name: Commit and Push Web Build
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+          git add .
+          git commit -m "Update web build" || echo "No changes to commit"
+          git push --force origin gh-pages
 
       - name: Deploy Web to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
