@@ -91,12 +91,7 @@ jobs:
           tag: v${{ env.VERSION }}
           token: ${{ secrets.TOKEN }}
 
-      - name: Ensure gh-pages branch exists
-        run: |
-          git fetch origin gh-pages || git checkout --orphan gh-pages
-          git reset --hard
-          git commit --allow-empty -m "Initialize gh-pages" || echo "Branch already exists"
-          git push --set-upstream origin gh-pages
+     
 
       - name: Commit and Push Web Build
         run: |
