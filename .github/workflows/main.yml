@@ -1,4 +1,4 @@
-name: main
+name: Flutter CI/CD
 
 on:
   push:
@@ -35,13 +35,13 @@ jobs:
         run: flutter build web
 
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload Web Build Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: web-build
           path: build/web
