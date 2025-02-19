@@ -19,11 +19,16 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.24.5
+          flutter-version: 3.24.5  # Change to your required Flutter version
           channel: stable
 
       - name: Install Dependencies
         run: flutter pub get
+
+
+
+      - name: Clean Flutter Build
+        run: flutter clean
 
       - name: Build Android APK
         run: flutter build apk --release
@@ -31,14 +36,16 @@ jobs:
       - name: Build Web Release
         run: flutter build web
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+      - name: Upload APK to GitHub Releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_TAG=$(date +'%Y.%m.%d-%H%M%S')
+          gh release create "$LATEST_TAG" build/app/outputs/flutter-apk/app-release.apk --title "Release $LATEST_TAG" --notes "Latest APK release" --prerelease || echo "Release already exists"
 
-      - name: Upload Web Build Artifact
-        uses: actions/upload-artifact@v4
+      - name: Deploy Web to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          name: web-build
-          path: build/web
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: build/web
