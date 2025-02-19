@@ -38,7 +38,7 @@ jobs:
 
       - name: Upload APK to GitHub Releases
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
           LATEST_TAG=$(date +'%Y.%m.%d-%H%M%S')
           gh release create "$LATEST_TAG" build/app/outputs/flutter-apk/app-release.apk --title "Release $LATEST_TAG" --notes "Latest APK release" --prerelease || echo "Release already exists"
@@ -46,6 +46,6 @@ jobs:
       - name: Deploy Web to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.TOKEN }}
           publish_branch: gh-pages
           publish_dir: build/web
