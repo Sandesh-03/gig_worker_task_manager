@@ -84,14 +84,15 @@ jobs:
           new_version="${{ env.VERSION }}-build-${{ github.run_number }}"
           echo "VERSION=$new_version" >> $GITHUB_ENV
 
-      - name: Create Release
+      - name: Create or Update Release
         uses: ncipollo/release-action@v1
         with:
           artifacts: "build/app/outputs/flutter-apk/app-release.apk,build/app/outputs/bundle/release/app-release.aab"
           tag: v${{ env.VERSION }}
           token: ${{ secrets.TOKEN }}
-
-     
+          allowUpdates: true  # Update existing release instead of failing
+          replacesArtifacts: true  # Replace old artifacts
+          omitBodyDuringUpdate: true  # Avoid modifying release notes
 
       - name: Commit and Push Web Build
         run: |
