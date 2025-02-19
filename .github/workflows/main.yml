@@ -10,20 +10,37 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Setup Java
+        uses: actions/setup-java@v3.12.0
+        with:
+          distribution: 'oracle'
+          java-version: '17'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.24.5  
+          flutter-version: 3.24.5
           channel: stable
 
       - name: Install Dependencies
         run: flutter pub get
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+      
+      - name: Create key.properties
+        run: |
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=keystore.jks" >> android/key.properties
 
 
 
@@ -33,20 +50,60 @@ jobs:
       - name: Build Android APK
         run: flutter build apk --release
 
+      - name: Build appBundle
+        run: flutter build appbundle
+
+      - name: Build IPA
+        run: flutter build ipa --no-codesign
+
       - name: Build Web Release
         run: flutter build web
 
-      - name: Upload APK to GitHub Releases
-        env:
-          GH_TOKEN: ${{ secrets.TOKEN }}
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Releases
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+            build/ios_build.tar.gz
+
+      - name: Extract version from pubspec.yaml
+        id: extract_version
         run: |
-          LATEST_TAG=$(date +'%Y.%m.%d-%H%M%S')
-          gh release create "$LATEST_TAG" --title "Release $LATEST_TAG" --notes "Latest APK release" --prerelease || echo "Release already exists"
-          gh release upload "$LATEST_TAG" build/app/outputs/flutter-apk/app-release.apk --clobber
+          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '
+')
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Check if Tag Exists
+        id: check_tag
+        run: |
+          if git rev-parse "v${{ env.VERSION }}" >/dev/null 2>&1; then
+            echo "TAG_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "TAG_EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Modify Tag
+        if: env.TAG_EXISTS == 'true'
+        id: modify_tag
+        run: |
+          new_version="${{ env.VERSION }}-build-${{ github.run_number }}"
+          echo "VERSION=$new_version" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/app/outputs/flutter-apk/app-release.apk,build/app/outputs/bundle/release/app-release.aab,build/ios_build.tar.gz"
+          tag: v${{ env.VERSION }}
+          token: ${{ secrets.TOKEN }}
 
       - name: Ensure gh-pages branch exists
         run: |
-          git ls-remote --exit-code --heads origin gh-pages || (git checkout --orphan gh-pages && git commit --allow-empty -m "Initialize gh-pages" && git push --set-upstream origin gh-pages)
+          git fetch origin gh-pages || git checkout --orphan gh-pages
+          git reset --hard
+          git commit --allow-empty -m "Initialize gh-pages" || echo "Branch already exists"
+          git push --set-upstream origin gh-pages
           git commit --allow-empty -m "Initialize gh-pages branch" || echo "Branch already exists"
           git push origin gh-pages || echo "Branch already exists"
 
