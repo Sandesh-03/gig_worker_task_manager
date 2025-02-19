@@ -19,7 +19,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.24.5  
+          flutter-version: 3.24.5 
           channel: stable
 
       - name: Install Dependencies
@@ -38,10 +38,17 @@ jobs:
 
       - name: Upload APK to GitHub Releases
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          personal_token: ${{ secrets.TOKEN }}
         run: |
           LATEST_TAG=$(date +'%Y.%m.%d-%H%M%S')
-          gh release create "$LATEST_TAG" build/app/outputs/flutter-apk/app-release.apk --title "Release $LATEST_TAG" --notes "Latest APK release" --prerelease || echo "Release already exists"
+          gh release create "$LATEST_TAG" --title "Release $LATEST_TAG" --notes "Latest APK release" --prerelease || echo "Release already exists"
+          gh release upload "$LATEST_TAG" build/app/outputs/flutter-apk/app-release.apk --clobber
+
+      - name: Ensure gh-pages branch exists
+        run: |
+          git fetch origin gh-pages || git checkout --orphan gh-pages
+          git commit --allow-empty -m "Initialize gh-pages branch" || echo "Branch already exists"
+          git push origin gh-pages || echo "Branch already exists"
 
       - name: Deploy Web to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
