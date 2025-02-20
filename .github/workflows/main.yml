@@ -90,9 +90,21 @@ jobs:
           artifacts: "build/app/outputs/flutter-apk/app-release.apk,build/app/outputs/bundle/release/app-release.aab"
           tag: v${{ env.VERSION }}
           token: ${{ secrets.TOKEN }}
-          allowUpdates: true  # Update existing release instead of failing
-          replacesArtifacts: true  # Replace old artifacts
-          omitBodyDuringUpdate: true  # Avoid modifying release notes
+          allowUpdates: true
+          replacesArtifacts: true
+          omitBodyDuringUpdate: true
+
+      - name: Setup gh-pages Branch
+        run: |
+          git fetch origin gh-pages || echo "gh-pages branch does not exist"
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git checkout gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf .
+            git commit --allow-empty -m "Initialize gh-pages branch"
+            git push origin gh-pages
+          fi
 
       - name: Commit and Push Web Build
         run: |
@@ -100,7 +112,7 @@ jobs:
           git config --global user.name "github-actions"
           git add .
           git commit -m "Update web build" || echo "No changes to commit"
-          git push --force origin gh-pages
+          git push origin gh-pages
 
       - name: Deploy Web to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
