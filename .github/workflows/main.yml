@@ -98,7 +98,9 @@ jobs:
         run: |
           git fetch origin gh-pages || echo "gh-pages branch does not exist"
           if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git stash
             git checkout gh-pages
+            git stash pop || echo "No changes to apply"
           else
             git checkout --orphan gh-pages
             git rm -rf .
